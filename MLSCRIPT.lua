@@ -144,7 +144,7 @@ titleFix.Parent = titleBar
 
 local titleLabel = Instance.new("TextLabel")
 titleLabel.BackgroundTransparency = 1
-titleLabel.Size = UDim2.new(1, -50, 1, 0)
+titleLabel.Size = UDim2.new(1, -84, 1, 0)
 titleLabel.Position = UDim2.new(0, 12, 0, 0)
 titleLabel.Text = "Egg Hatcher"
 titleLabel.TextColor3 = Color3.fromRGB(235, 235, 240)
@@ -152,6 +152,22 @@ titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 titleLabel.Font = Enum.Font.GothamBold
 titleLabel.TextSize = 14
 titleLabel.Parent = titleBar
+
+local stopBtn = Instance.new("TextButton")
+stopBtn.Name = "StopBtn"
+stopBtn.Size = UDim2.new(0, 26, 0, 26)
+stopBtn.Position = UDim2.new(1, -64, 0, 4)
+stopBtn.BackgroundColor3 = Color3.fromRGB(60, 40, 40)
+stopBtn.AutoButtonColor = false
+stopBtn.Text = "X"
+stopBtn.Font = Enum.Font.GothamBold
+stopBtn.TextSize = 16
+stopBtn.TextColor3 = Color3.fromRGB(220, 120, 120)
+stopBtn.Parent = titleBar
+
+local stopCorner = Instance.new("UICorner")
+stopCorner.CornerRadius = UDim.new(0, 6)
+stopCorner.Parent = stopBtn
 
 local minimizeBtn = Instance.new("TextButton")
 minimizeBtn.Name = "MinimizeBtn"
@@ -302,6 +318,8 @@ featuresLabel.TextSize = 12
 featuresLabel.TextXAlignment = Enum.TextXAlignment.Left
 featuresLabel.Parent = content
 
+local featureToggleRefreshers = {}
+
 local function createFeatureToggle(layoutOrder, labelOn, labelOff, getState, setState, onEnabled)
     local btn = Instance.new("TextButton")
     btn.LayoutOrder = layoutOrder
@@ -335,6 +353,7 @@ local function createFeatureToggle(layoutOrder, labelOn, labelOff, getState, set
     end)
 
     refresh()
+    table.insert(featureToggleRefreshers, refresh)
     return btn
 end
 
@@ -370,6 +389,52 @@ minimizeBtn.MouseButton1Click:Connect(function()
     TweenService:Create(main, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
         Size = targetSize
     }):Play()
+end)
+
+local awaitingStopConfirm = false
+local stopConfirmToken = 0
+
+local function resetStopButton()
+    stopBtn.Text = "X"
+    stopBtn.BackgroundColor3 = Color3.fromRGB(60, 40, 40)
+    stopBtn.TextColor3 = Color3.fromRGB(220, 120, 120)
+    awaitingStopConfirm = false
+end
+
+local function killEverything()
+    autohatch = false
+    autoMerchant = false
+    autoGifts = false
+    selectedEgg = nil
+
+    for _, refresh in ipairs(featureToggleRefreshers) do
+        refresh()
+    end
+    updateToggleVisual()
+    refreshEggButtons()
+
+    task.wait(0.05)
+    screenGui:Destroy()
+end
+
+stopBtn.MouseButton1Click:Connect(function()
+    if not awaitingStopConfirm then
+        awaitingStopConfirm = true
+        stopConfirmToken = stopConfirmToken + 1
+        local myToken = stopConfirmToken
+
+        stopBtn.Text = "!"
+        stopBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+        stopBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+        task.delay(3, function()
+            if stopConfirmToken == myToken and awaitingStopConfirm then
+                resetStopButton()
+            end
+        end)
+    else
+        killEverything()
+    end
 end)
 
 local dragging = false

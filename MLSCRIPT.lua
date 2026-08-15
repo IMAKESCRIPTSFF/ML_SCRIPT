@@ -14,6 +14,7 @@ local selectedEgg = nil
 
 local autoMerchant = false
 local autoGifts = false
+local autoSpinWheel = false
 
 local eggList = {
     "Release Egg",
@@ -46,6 +47,14 @@ local function claimPlaytimeGift(gift)
     local args = {
         [1] = "ClaimPlaytimeGift",
         [2] = gift
+    }
+    ClientPackets:FireServer(unpack(args))
+end
+
+local function spinWheel()
+    local args = {
+        [1] = "SpinWheel",
+        [2] = {}
     }
     ClientPackets:FireServer(unpack(args))
 end
@@ -97,13 +106,26 @@ local function startGiftsLoop()
     end)
 end
 
+local spinWheelLoopRunning = false
+local function startSpinWheelLoop()
+    if spinWheelLoopRunning then return end
+    spinWheelLoopRunning = true
+    task.spawn(function()
+        while autoSpinWheel do
+            spinWheel()
+            task.wait(1)
+        end
+        spinWheelLoopRunning = false
+    end)
+end
+
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "EggHatcherGUI"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = playerGui
 
-local FULL_HEIGHT = 400
+local FULL_HEIGHT = 450
 local MIN_HEIGHT = 34
 
 local main = Instance.new("Frame")
@@ -375,6 +397,15 @@ createFeatureToggle(
     startGiftsLoop
 )
 
+createFeatureToggle(
+    8,
+    "AUTO SPIN WHEEL: ON",
+    "AUTO SPIN WHEEL: OFF",
+    function() return autoSpinWheel end,
+    function(v) autoSpinWheel = v end,
+    startSpinWheelLoop
+)
+
 local minimized = false
 
 minimizeBtn.MouseButton1Click:Connect(function()
@@ -405,6 +436,7 @@ local function killEverything()
     autohatch = false
     autoMerchant = false
     autoGifts = false
+    autoSpinWheel = false
     selectedEgg = nil
 
     for _, refresh in ipairs(featureToggleRefreshers) do

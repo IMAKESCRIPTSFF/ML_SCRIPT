@@ -19,6 +19,7 @@ local autoSpinWheel = false
 local eggList = {
     "Release Egg",
     "Mushroom Egg",
+    "Deep Sea Egg",
 }
 
 local function hatchEgg()
@@ -29,6 +30,7 @@ local function hatchEgg()
             ["Multi"] = true
         }
     }
+
     ClientPackets:FireServer(unpack(args))
 end
 
@@ -40,14 +42,16 @@ local function merchantPurchase(index)
             ["index"] = index
         }
     }
+
     ClientPackets:FireServer(unpack(args))
 end
 
-local function claimPlaytimeGift(gift)
+local function claimPlaytimeGift()
     local args = {
         [1] = "ClaimPlaytimeGift",
-        [2] = gift
+        [2] = 1
     }
+
     ClientPackets:FireServer(unpack(args))
 end
 
@@ -56,65 +60,74 @@ local function spinWheel()
         [1] = "SpinWheel",
         [2] = {}
     }
+
     ClientPackets:FireServer(unpack(args))
 end
 
 local hatchLoopRunning = false
+
 local function startHatchLoop()
     if hatchLoopRunning then return end
     hatchLoopRunning = true
+
     task.spawn(function()
         while autohatch and selectedEgg do
             hatchEgg()
             task.wait(0.1)
         end
+
         hatchLoopRunning = false
     end)
 end
 
 local merchantLoopRunning = false
+
 local function startMerchantLoop()
     if merchantLoopRunning then return end
     merchantLoopRunning = true
+
     task.spawn(function()
         while autoMerchant do
             for index = 1, 6 do
                 if not autoMerchant then break end
+
                 merchantPurchase(index)
                 task.wait(5)
             end
         end
+
         merchantLoopRunning = false
     end)
 end
 
 local giftsLoopRunning = false
+
 local function startGiftsLoop()
     if giftsLoopRunning then return end
     giftsLoopRunning = true
+
     task.spawn(function()
         while autoGifts do
-            for gift = 1, 12 do
-                if not autoGifts then break end
-                claimPlaytimeGift(gift)
-                task.wait(0.2)
-            end
-            if not autoGifts then break end
-            task.wait(600)
+            claimPlaytimeGift()
+            task.wait(1)
         end
+
         giftsLoopRunning = false
     end)
 end
 
 local spinWheelLoopRunning = false
+
 local function startSpinWheelLoop()
     if spinWheelLoopRunning then return end
     spinWheelLoopRunning = true
+
     task.spawn(function()
         while autoSpinWheel do
             spinWheel()
             task.wait(1)
         end
+
         spinWheelLoopRunning = false
     end)
 end
@@ -131,7 +144,7 @@ local MIN_HEIGHT = 34
 local main = Instance.new("Frame")
 main.Name = "Main"
 main.Size = UDim2.new(0, 240, 0, FULL_HEIGHT)
-main.Position = UDim2.new(0.5, -120, 0.5, -FULL_HEIGHT/2)
+main.Position = UDim2.new(0.5, -120, 0.5, -FULL_HEIGHT / 2)
 main.BackgroundColor3 = Color3.fromRGB(28, 28, 34)
 main.BorderSizePixel = 0
 main.ClipsDescendants = true
@@ -233,7 +246,12 @@ eggLabel.Parent = content
 local eggListFrame = Instance.new("Frame")
 eggListFrame.LayoutOrder = 2
 eggListFrame.BackgroundTransparency = 1
-eggListFrame.Size = UDim2.new(1, 0, 0, #eggList * 34 + (#eggList - 1) * 6)
+eggListFrame.Size = UDim2.new(
+    1,
+    0,
+    0,
+    #eggList * 34 + (#eggList - 1) * 6
+)
 eggListFrame.Parent = content
 
 local eggListLayout = Instance.new("UIListLayout")
@@ -247,9 +265,11 @@ local updateToggleVisual
 local function refreshEggButtons()
     for _, btn in pairs(eggButtons) do
         local isSelected = btn.Name == selectedEgg
+
         btn.BackgroundColor3 = isSelected
             and Color3.fromRGB(90, 130, 240)
             or Color3.fromRGB(40, 40, 48)
+
         btn.TextColor3 = isSelected
             and Color3.fromRGB(255, 255, 255)
             or Color3.fromRGB(200, 200, 205)
@@ -258,6 +278,7 @@ end
 
 for i, eggName in ipairs(eggList) do
     local btn = Instance.new("TextButton")
+
     btn.Name = eggName
     btn.LayoutOrder = i
     btn.Size = UDim2.new(1, 0, 0, 34)
@@ -275,8 +296,10 @@ for i, eggName in ipairs(eggList) do
 
     btn.MouseButton1Click:Connect(function()
         selectedEgg = eggName
+
         refreshEggButtons()
         updateToggleVisual()
+
         if autohatch then
             startHatchLoop()
         end
@@ -304,19 +327,24 @@ updateToggleVisual = function()
     if autohatch and selectedEgg then
         toggleBtn.Text = "AUTOHATCH: ON"
         toggleBtn.BackgroundColor3 = Color3.fromRGB(200, 70, 70)
+
     elseif autohatch and not selectedEgg then
         toggleBtn.Text = "AUTOHATCH: ON (select an egg)"
         toggleBtn.BackgroundColor3 = Color3.fromRGB(180, 140, 50)
+
     else
         toggleBtn.Text = "AUTOHATCH: OFF"
         toggleBtn.BackgroundColor3 = Color3.fromRGB(60, 180, 100)
     end
 end
+
 updateToggleVisual()
 
 toggleBtn.MouseButton1Click:Connect(function()
     autohatch = not autohatch
+
     updateToggleVisual()
+
     if autohatch and selectedEgg then
         startHatchLoop()
     end
@@ -342,8 +370,16 @@ featuresLabel.Parent = content
 
 local featureToggleRefreshers = {}
 
-local function createFeatureToggle(layoutOrder, labelOn, labelOff, getState, setState, onEnabled)
+local function createFeatureToggle(
+    layoutOrder,
+    labelOn,
+    labelOff,
+    getState,
+    setState,
+    onEnabled
+)
     local btn = Instance.new("TextButton")
+
     btn.LayoutOrder = layoutOrder
     btn.Size = UDim2.new(1, 0, 0, 38)
     btn.AutoButtonColor = false
@@ -369,6 +405,7 @@ local function createFeatureToggle(layoutOrder, labelOn, labelOff, getState, set
     btn.MouseButton1Click:Connect(function()
         setState(not getState())
         refresh()
+
         if getState() then
             onEnabled()
         end
@@ -376,6 +413,7 @@ local function createFeatureToggle(layoutOrder, labelOn, labelOff, getState, set
 
     refresh()
     table.insert(featureToggleRefreshers, refresh)
+
     return btn
 end
 
@@ -383,8 +421,12 @@ createFeatureToggle(
     6,
     "AUTO MERCHANT: ON",
     "AUTO MERCHANT: OFF",
-    function() return autoMerchant end,
-    function(v) autoMerchant = v end,
+    function()
+        return autoMerchant
+    end,
+    function(v)
+        autoMerchant = v
+    end,
     startMerchantLoop
 )
 
@@ -392,8 +434,12 @@ createFeatureToggle(
     7,
     "AUTO PLAYTIME GIFTS: ON",
     "AUTO PLAYTIME GIFTS: OFF",
-    function() return autoGifts end,
-    function(v) autoGifts = v end,
+    function()
+        return autoGifts
+    end,
+    function(v)
+        autoGifts = v
+    end,
     startGiftsLoop
 )
 
@@ -401,8 +447,12 @@ createFeatureToggle(
     8,
     "AUTO SPIN WHEEL: ON",
     "AUTO SPIN WHEEL: OFF",
-    function() return autoSpinWheel end,
-    function(v) autoSpinWheel = v end,
+    function()
+        return autoSpinWheel
+    end,
+    function(v)
+        autoSpinWheel = v
+    end,
     startSpinWheelLoop
 )
 
@@ -411,15 +461,31 @@ local minimized = false
 minimizeBtn.MouseButton1Click:Connect(function()
     minimized = not minimized
 
-    local targetHeight = minimized and MIN_HEIGHT or FULL_HEIGHT
-    local targetSize = UDim2.new(main.Size.X.Scale, main.Size.X.Offset, 0, targetHeight)
+    local targetHeight = minimized
+        and MIN_HEIGHT
+        or FULL_HEIGHT
+
+    local targetSize = UDim2.new(
+        main.Size.X.Scale,
+        main.Size.X.Offset,
+        0,
+        targetHeight
+    )
 
     minimizeBtn.Text = minimized and "+" or "-"
     content.Visible = not minimized
 
-    TweenService:Create(main, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Size = targetSize
-    }):Play()
+    TweenService:Create(
+        main,
+        TweenInfo.new(
+            0.18,
+            Enum.EasingStyle.Quad,
+            Enum.EasingDirection.Out
+        ),
+        {
+            Size = targetSize
+        }
+    ):Play()
 end)
 
 local awaitingStopConfirm = false
@@ -442,6 +508,7 @@ local function killEverything()
     for _, refresh in ipairs(featureToggleRefreshers) do
         refresh()
     end
+
     updateToggleVisual()
     refreshEggButtons()
 
@@ -453,6 +520,7 @@ stopBtn.MouseButton1Click:Connect(function()
     if not awaitingStopConfirm then
         awaitingStopConfirm = true
         stopConfirmToken = stopConfirmToken + 1
+
         local myToken = stopConfirmToken
 
         stopBtn.Text = "!"
@@ -470,11 +538,13 @@ stopBtn.MouseButton1Click:Connect(function()
 end)
 
 local dragging = false
-local dragStart, startPos
+local dragStart
+local startPos
 
 titleBar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1
         or input.UserInputType == Enum.UserInputType.Touch then
+
         dragging = true
         dragStart = input.Position
         startPos = main.Position
@@ -488,12 +558,19 @@ titleBar.InputBegan:Connect(function(input)
 end)
 
 titleBar.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
-        or input.UserInputType == Enum.UserInputType.Touch) then
+    if dragging
+        and (
+            input.UserInputType == Enum.UserInputType.MouseMovement
+            or input.UserInputType == Enum.UserInputType.Touch
+        ) then
+
         local delta = input.Position - dragStart
+
         main.Position = UDim2.new(
-            startPos.X.Scale, startPos.X.Offset + delta.X,
-            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
         )
     end
 end)

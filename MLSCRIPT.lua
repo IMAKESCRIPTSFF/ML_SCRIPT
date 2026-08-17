@@ -12,7 +12,6 @@ local ClientPackets = ReplicatedStorage
 local autohatch = false
 local selectedEgg = nil
 
--- DEFAULT SETTINGS
 local autoMerchant = true
 local autoGifts = true
 local autoSpinWheel = false
@@ -90,9 +89,7 @@ local function startMerchantLoop()
     task.spawn(function()
         while autoMerchant do
             for index = 1, 6 do
-                if not autoMerchant then
-                    break
-                end
+                if not autoMerchant then break end
 
                 merchantPurchase(index)
                 task.wait(5)
@@ -436,4 +433,144 @@ createFeatureToggle(
 createFeatureToggle(
     7,
     "AUTO PLAYTIME GIFTS: ON",
-    "AUTO PLAY
+    "AUTO PLAYTIME GIFTS: OFF",
+    function()
+        return autoGifts
+    end,
+    function(v)
+        autoGifts = v
+    end,
+    startGiftsLoop
+)
+
+createFeatureToggle(
+    8,
+    "AUTO SPIN WHEEL: ON",
+    "AUTO SPIN WHEEL: OFF",
+    function()
+        return autoSpinWheel
+    end,
+    function(v)
+        autoSpinWheel = v
+    end,
+    startSpinWheelLoop
+)
+
+local minimized = false
+
+minimizeBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+
+    local targetHeight = minimized
+        and MIN_HEIGHT
+        or FULL_HEIGHT
+
+    local targetSize = UDim2.new(
+        main.Size.X.Scale,
+        main.Size.X.Offset,
+        0,
+        targetHeight
+    )
+
+    minimizeBtn.Text = minimized and "+" or "-"
+    content.Visible = not minimized
+
+    TweenService:Create(
+        main,
+        TweenInfo.new(
+            0.18,
+            Enum.EasingStyle.Quad,
+            Enum.EasingDirection.Out
+        ),
+        {
+            Size = targetSize
+        }
+    ):Play()
+end)
+
+local awaitingStopConfirm = false
+local stopConfirmToken = 0
+
+local function resetStopButton()
+    stopBtn.Text = "X"
+    stopBtn.BackgroundColor3 = Color3.fromRGB(60, 40, 40)
+    stopBtn.TextColor3 = Color3.fromRGB(220, 120, 120)
+    awaitingStopConfirm = false
+end
+
+local function killEverything()
+    autohatch = false
+    autoMerchant = false
+    autoGifts = false
+    autoSpinWheel = false
+    selectedEgg = nil
+
+    for _, refresh in ipairs(featureToggleRefreshers) do
+        refresh()
+    end
+
+    updateToggleVisual()
+    refreshEggButtons()
+
+    task.wait(0.05)
+    screenGui:Destroy()
+end
+
+stopBtn.MouseButton1Click:Connect(function()
+    if not awaitingStopConfirm then
+        awaitingStopConfirm = true
+        stopConfirmToken = stopConfirmToken + 1
+
+        local myToken = stopConfirmToken
+
+        stopBtn.Text = "!"
+        stopBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+        stopBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+        task.delay(3, function()
+            if stopConfirmToken == myToken and awaitingStopConfirm then
+                resetStopButton()
+            end
+        end)
+    else
+        killEverything()
+    end
+end)
+
+local dragging = false
+local dragStart
+local startPos
+
+titleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+
+        dragging = true
+        dragStart = input.Position
+        startPos = main.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+titleBar.InputChanged:Connect(function(input)
+    if dragging
+        and (
+            input.UserInputType == Enum.UserInputType.MouseMovement
+            or input.UserInputType == Enum.UserInputType.Touch
+        ) then
+
+        local delta = input.Position - dragStart
+
+        main.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)

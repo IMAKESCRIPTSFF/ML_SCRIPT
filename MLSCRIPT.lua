@@ -18,6 +18,7 @@ local ClientPackets = ReplicatedStorage
 local autohatch = false
 local selectedEgg = nil
 
+-- Default settings
 local autoMerchant = true
 local autoGifts = true
 local autoSpinWheel = false
@@ -73,7 +74,10 @@ end
 local hatchLoopRunning = false
 
 local function startHatchLoop()
-    if hatchLoopRunning then return end
+    if hatchLoopRunning then
+        return
+    end
+
     hatchLoopRunning = true
 
     task.spawn(function()
@@ -89,13 +93,18 @@ end
 local merchantLoopRunning = false
 
 local function startMerchantLoop()
-    if merchantLoopRunning then return end
+    if merchantLoopRunning then
+        return
+    end
+
     merchantLoopRunning = true
 
     task.spawn(function()
         while autoMerchant do
             for index = 1, 6 do
-                if not autoMerchant then break end
+                if not autoMerchant then
+                    break
+                end
 
                 merchantPurchase(index)
                 task.wait(5)
@@ -109,7 +118,10 @@ end
 local giftsLoopRunning = false
 
 local function startGiftsLoop()
-    if giftsLoopRunning then return end
+    if giftsLoopRunning then
+        return
+    end
+
     giftsLoopRunning = true
 
     task.spawn(function()
@@ -125,7 +137,10 @@ end
 local spinWheelLoopRunning = false
 
 local function startSpinWheelLoop()
-    if spinWheelLoopRunning then return end
+    if spinWheelLoopRunning then
+        return
+    end
+
     spinWheelLoopRunning = true
 
     task.spawn(function()
@@ -216,7 +231,7 @@ minimizeBtn.Size = UDim2.new(0, 26, 0, 26)
 minimizeBtn.Position = UDim2.new(1, -32, 0, 4)
 minimizeBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
 minimizeBtn.AutoButtonColor = false
-minimizeBtn.Text = "-"
+minimizeBtn.Text = "+"
 minimizeBtn.Font = Enum.Font.GothamBold
 minimizeBtn.TextSize = 18
 minimizeBtn.TextColor3 = Color3.fromRGB(220, 220, 225)
@@ -462,7 +477,18 @@ createFeatureToggle(
     startSpinWheelLoop
 )
 
-local minimized = false
+-- Start minimized by default
+local minimized = true
+
+content.Visible = false
+minimizeBtn.Text = "+"
+
+main.Size = UDim2.new(
+    main.Size.X.Scale,
+    main.Size.X.Offset,
+    0,
+    MIN_HEIGHT
+)
 
 minimizeBtn.MouseButton1Click:Connect(function()
     minimized = not minimized
@@ -580,3 +606,16 @@ titleBar.InputChanged:Connect(function(input)
         )
     end
 end)
+
+-- Start the default-enabled features immediately.
+if autoMerchant then
+    startMerchantLoop()
+end
+
+if autoGifts then
+    startGiftsLoop()
+end
+
+if autoSpinWheel then
+    startSpinWheelLoop()
+end

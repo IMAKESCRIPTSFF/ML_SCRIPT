@@ -1,3 +1,9 @@
+local REQUIRED_PLACE_ID = 138805779586842
+
+if game.PlaceId ~= REQUIRED_PLACE_ID then
+    return
+end
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")

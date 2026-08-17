@@ -1,6 +1,3 @@
-Yep — I added it directly into your script. Auto Merchant and Auto Playtime Gifts now start ON automatically, while Auto Spin Wheel stays OFF.
-
-Egg Hatcher Script — Merchant & Gifts On Startup
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")

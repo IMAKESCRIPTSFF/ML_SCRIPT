@@ -29,6 +29,22 @@ local eggList = {
     "Deep Sea Egg",
 }
 
+-- Atlantis Egg teleport coordinates
+local ATLANTIS_EGG_POSITION = Vector3.new(
+    -1320.72021484375,
+    28.79366111755371,
+    1560.4420166015625
+)
+
+local function teleportToAtlantisEgg()
+    local character = player.Character or player.CharacterAdded:Wait()
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+
+    if rootPart then
+        rootPart.CFrame = CFrame.new(ATLANTIS_EGG_POSITION)
+    end
+end
+
 local function hatchEgg()
     local args = {
         [1] = "HatchEgg",
@@ -159,7 +175,7 @@ screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = playerGui
 
-local FULL_HEIGHT = 450
+local FULL_HEIGHT = 500
 local MIN_HEIGHT = 34
 
 local main = Instance.new("Frame")
@@ -476,6 +492,27 @@ createFeatureToggle(
     end,
     startSpinWheelLoop
 )
+
+-- Atlantis Egg teleport button
+local atlantisTPButton = Instance.new("TextButton")
+
+atlantisTPButton.LayoutOrder = 9
+atlantisTPButton.Size = UDim2.new(1, 0, 0, 38)
+atlantisTPButton.BackgroundColor3 = Color3.fromRGB(70, 120, 200)
+atlantisTPButton.AutoButtonColor = false
+atlantisTPButton.Text = "ATLANTIS EGG TP"
+atlantisTPButton.Font = Enum.Font.GothamBold
+atlantisTPButton.TextSize = 14
+atlantisTPButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+atlantisTPButton.Parent = content
+
+local atlantisCorner = Instance.new("UICorner")
+atlantisCorner.CornerRadius = UDim.new(0, 6)
+atlantisCorner.Parent = atlantisTPButton
+
+atlantisTPButton.MouseButton1Click:Connect(function()
+    teleportToAtlantisEgg()
+end)
 
 -- Start minimized by default
 local minimized = true

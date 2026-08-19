@@ -27,6 +27,7 @@ local eggList = {
     "Release Egg",
     "Mushroom Egg",
     "Deep Sea Egg",
+    "Coral Egg",
 }
 
 -- Atlantis Egg teleport coordinates

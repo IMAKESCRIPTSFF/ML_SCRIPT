@@ -70,10 +70,11 @@ local function merchantPurchase(index)
     ClientPackets:FireServer(unpack(args))
 end
 
-local function claimPlaytimeGift()
+-- Claim a specific playtime gift (1-12)
+local function claimPlaytimeGift(index)
     local args = {
         [1] = "ClaimPlaytimeGift",
-        [2] = 1
+        [2] = index
     }
 
     ClientPackets:FireServer(unpack(args))
@@ -87,6 +88,10 @@ local function spinWheel()
 
     ClientPackets:FireServer(unpack(args))
 end
+
+-- =========================
+-- AUTO HATCH
+-- =========================
 
 local hatchLoopRunning = false
 
@@ -106,6 +111,10 @@ local function startHatchLoop()
         hatchLoopRunning = false
     end)
 end
+
+-- =========================
+-- AUTO MERCHANT
+-- =========================
 
 local merchantLoopRunning = false
 
@@ -132,6 +141,10 @@ local function startMerchantLoop()
     end)
 end
 
+-- =========================
+-- AUTO PLAYTIME GIFTS
+-- =========================
+
 local giftsLoopRunning = false
 
 local function startGiftsLoop()
@@ -143,13 +156,33 @@ local function startGiftsLoop()
 
     task.spawn(function()
         while autoGifts do
-            claimPlaytimeGift()
-            task.wait(1)
+
+            -- Claim gifts 1 through 12
+            for giftIndex = 1, 12 do
+                if not autoGifts then
+                    break
+                end
+
+                claimPlaytimeGift(giftIndex)
+
+                -- Small delay between individual claims
+                task.wait(0.1)
+            end
+
+            -- Wait 600 seconds (10 minutes)
+            -- before starting the next cycle.
+            if autoGifts then
+                task.wait(600)
+            end
         end
 
         giftsLoopRunning = false
     end)
 end
+
+-- =========================
+-- AUTO SPIN WHEEL
+-- =========================
 
 local spinWheelLoopRunning = false
 
@@ -169,6 +202,10 @@ local function startSpinWheelLoop()
         spinWheelLoopRunning = false
     end)
 end
+
+-- =========================
+-- GUI
+-- =========================
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "EggHatcherGUI"
@@ -494,7 +531,10 @@ createFeatureToggle(
     startSpinWheelLoop
 )
 
--- Atlantis Egg teleport button
+-- =========================
+-- ATLANTIS TELEPORT
+-- =========================
+
 local atlantisTPButton = Instance.new("TextButton")
 
 atlantisTPButton.LayoutOrder = 9
@@ -515,7 +555,10 @@ atlantisTPButton.MouseButton1Click:Connect(function()
     teleportToAtlantisEgg()
 end)
 
--- Start minimized by default
+-- =========================
+-- MINIMIZE
+-- =========================
+
 local minimized = true
 
 content.Visible = false
@@ -557,6 +600,10 @@ minimizeBtn.MouseButton1Click:Connect(function()
         }
     ):Play()
 end)
+
+-- =========================
+-- STOP BUTTON
+-- =========================
 
 local awaitingStopConfirm = false
 local stopConfirmToken = 0
@@ -607,6 +654,10 @@ stopBtn.MouseButton1Click:Connect(function()
     end
 end)
 
+-- =========================
+-- DRAGGING
+-- =========================
+
 local dragging = false
 local dragStart
 local startPos
@@ -645,7 +696,10 @@ titleBar.InputChanged:Connect(function(input)
     end
 end)
 
--- Start the default-enabled features immediately.
+-- =========================
+-- START DEFAULT FEATURES
+-- =========================
+
 if autoMerchant then
     startMerchantLoop()
 end

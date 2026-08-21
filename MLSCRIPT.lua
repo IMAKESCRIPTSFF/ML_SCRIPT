@@ -1,3 +1,133 @@
+-- Key gate
+local KEY = "ARTINI69"
+local KEY_LINK = "https://link-target.net/8538226/B2RMOON7kHoz"
+
+-- Remember successful key verification for 24 hours on this device.
+local KEY_CACHE_NAME = "MLScript_KeyCache"
+local KEY_CACHE_DURATION = 24 * 60 * 60
+local LIFETIME_KEY = true
+
+local function hasValidCachedKey()
+    if not isfile or not readfile then
+        return false
+    end
+
+    local ok, data = pcall(function()
+        return readfile(KEY_CACHE_NAME)
+    end)
+
+    if not ok or not data then
+        return false
+    end
+
+    if data == "LIFETIME" then
+        return true
+    end
+
+    local timestamp = tonumber(data)
+    return timestamp and (os.time() - timestamp) < KEY_CACHE_DURATION
+end
+
+local function saveKeyCache()
+    if writefile then
+        pcall(function()
+            writefile(KEY_CACHE_NAME, LIFETIME_KEY and "LIFETIME" or tostring(os.time()))
+        end)
+    end
+end
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+if hasValidCachedKey() then
+    -- Key was already verified within the last 24 hours.
+else
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "KeyGate"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 320, 0, 180)
+frame.Position = UDim2.new(0.5, -160, 0.5, -90)
+frame.BackgroundColor3 = Color3.fromRGB(28, 28, 34)
+frame.BorderSizePixel = 0
+frame.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = frame
+
+local title = Instance.new("TextLabel")
+title.BackgroundTransparency = 1
+title.Size = UDim2.new(1, -20, 0, 35)
+title.Position = UDim2.new(0, 10, 0, 10)
+title.Text = "Enter Key"
+title.TextColor3 = Color3.fromRGB(235, 235, 240)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+title.Parent = frame
+
+local box = Instance.new("TextBox")
+box.Size = UDim2.new(1, -40, 0, 38)
+box.Position = UDim2.new(0, 20, 0, 55)
+box.PlaceholderText = "Key..."
+box.ClearTextOnFocus = false
+box.TextColor3 = Color3.fromRGB(235, 235, 240)
+box.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
+box.Parent = frame
+
+local getKey = Instance.new("TextButton")
+getKey.Size = UDim2.new(0.45, -5, 0, 35)
+getKey.Position = UDim2.new(0, 20, 0, 110)
+getKey.Text = "GET KEY"
+getKey.Font = Enum.Font.GothamBold
+getKey.TextSize = 13
+getKey.TextColor3 = Color3.fromRGB(255, 255, 255)
+getKey.BackgroundColor3 = Color3.fromRGB(70, 120, 200)
+getKey.Parent = frame
+
+local check = Instance.new("TextButton")
+check.Size = UDim2.new(0.45, -5, 0, 35)
+check.Position = UDim2.new(0.55, -15, 0, 110)
+check.Text = "CHECK"
+check.Font = Enum.Font.GothamBold
+check.TextSize = 13
+check.TextColor3 = Color3.fromRGB(255, 255, 255)
+check.BackgroundColor3 = Color3.fromRGB(60, 180, 100)
+check.Parent = frame
+
+local status = Instance.new("TextLabel")
+status.BackgroundTransparency = 1
+status.Size = UDim2.new(1, -20, 0, 22)
+status.Position = UDim2.new(0, 10, 1, -28)
+status.Text = ""
+status.TextColor3 = Color3.fromRGB(220, 120, 120)
+status.Font = Enum.Font.Gotham
+status.TextSize = 12
+status.Parent = frame
+
+getKey.MouseButton1Click:Connect(function()
+    if setclipboard then
+        setclipboard(KEY_LINK)
+        status.Text = "Key link copied!"
+    else
+        status.Text = KEY_LINK
+    end
+end)
+
+check.MouseButton1Click:Connect(function()
+    if box.Text == KEY then
+        saveKeyCache()
+        gui:Destroy()
+    else
+        status.Text = "Invalid key."
+    end
+end)
+
+    repeat task.wait() until not player.PlayerGui:FindFirstChild("KeyGate")
+end
+
 local REQUIRED_PLACE_ID = 138805779586842
 
 if game.PlaceId ~= REQUIRED_PLACE_ID then
